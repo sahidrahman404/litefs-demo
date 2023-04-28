@@ -12,7 +12,7 @@ if (!fs.existsSync(litefs)) {
   process.exit(1);
 }
 
-const db = new Database(`${litefs}/readme`);
+const db = new Database(`${litefs}/readme.db`);
 db.pragma("journal_mode = WAL");
 
 app.get("/", async (req, res) => {

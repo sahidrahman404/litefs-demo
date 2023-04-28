@@ -17,7 +17,7 @@ data:
 proxy:
   addr: ":8080"
   target: "localhost:8081"
-  db: "readme"
+  db: "readme.db"
   passthrough:
     - "*.ico"
     - "*.png"
@@ -27,8 +27,7 @@ proxy:
 # the last command to be long-running (e.g. an application server). When the
 # last command exits, LiteFS is shut down.
 exec:
-  - cmd: "litefs-readme -addr :8081 -dsn /litefs/readme"
-
+  - cmd: "litefs-readme -addr :8081 -dsn /litefs/readme.db"
 lease:
   type: "consul"
 
