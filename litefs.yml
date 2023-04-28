@@ -28,26 +28,26 @@ proxy:
 # last command exits, LiteFS is shut down.
 exec:
   - cmd: "litefs-readme -addr :8081 -dsn /litefs/readme.db"
+
+# The lease section defines how LiteFS creates a cluster and
+# implements leader election. For dynamic clusters, use the
+# "consul". This allows the primary to change automatically when
+# the current primary goes down. For a simpler setup, use
+# "static" which assigns a single node to be the primary and does
+# not failover.
 lease:
-  type: "consul"
+  # Required. Must be either "consul" or "static".
+  type: "static"
 
-  # Specifies if this node can become primary. The expression below evaluates
-  # to true on nodes that are run in the primary region. Nodes in other regions
-  # act as non-candidate, read-only replicas.
+  # Required. The URL for this node's LiteFS API.
+  # Should match HTTP port.
+  advertise-url: "http://${HOSTNAME}.vm.${FLY_APP_NAME}.internal:20202"
+
+  # Sets the hostname that other nodes will use to reference this
+  # node. Automatically assigned based on hostname(1) if not set.
+  hostname: ${HOSTNAME}
+
+  # Specifies whether the node can become the primary. If using
+  # "static" leasing, this should be set to true on the primary
+  # and false on the replicas.
   candidate: ${FLY_REGION == PRIMARY_REGION}
-
-  # If true, then the node will automatically become primary after it has
-  # connected with the cluster and sync'd up. This makes it easier to run
-  # migrations on start up.
-  promote: true
-
-  # The API URL that other nodes will use to connect to this node.
-  advertise-url: "http://${FLY_ALLOC_ID}.vm.${FLY_APP_NAME}.internal:20202"
-
-  consul:
-    # The URL of the Consul cluster.
-    url: "${FLY_CONSUL_URL}"
-
-    # A unique key shared by all nodes in the LiteFS cluster.
-    # Change this if you are running multiple clusters in a single app!
-    key: "${FLY_APP_NAME}/primary"
