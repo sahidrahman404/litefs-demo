@@ -30,14 +30,14 @@ COPY --link . .
 # Final stage for app image
 FROM base
 
-COPY --from=flyio/litefs:0.4 /usr/local/bin/litefs /usr/local/bin/litefs
 # Copy built application
+COPY --from=flyio/litefs:0.4 /usr/local/bin/litefs /usr/local/bin/litefs
 COPY --from=build /app /app
 
-ADD litefs.yml litefs.yml
+ADD etc/litefs.yml /etc/litefs.yml
 
 RUN apt-get update -qq && \
-    apt-get install -y fuse3 sqlite3 ca-certificates curl
-# Start the server by default, this can be overwritten at runtime
+    apt-get install -y bash fuse3 sqlite3 ca-certificates curl
 
-ENTRYPOINT ["litefs", "mount", "--", "npm", "start"]
+# Start the server by default, this can be overwritten at runtime
+ENTRYPOINT litefs mount
