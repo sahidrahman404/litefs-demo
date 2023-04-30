@@ -4,8 +4,7 @@ import Database from "better-sqlite3";
 
 const app = express();
 const port = process.env.PORT || "8080";
-let litefs =
-  process.env.NODE_ENV === "production" ? "/var/lib/litefs" : "./litefs";
+let litefs = process.env.NODE_ENV === "production" ? "/litefs" : "./litefs";
 
 if (!fs.existsSync(litefs)) {
   console.error("Unable to reach", litefs);
@@ -17,20 +16,30 @@ db.pragma("journal_mode = WAL");
 
 app.get("/", async (req, res) => {
   res.send({
+    getStory: "/get-story",
     listStory: "/list-story",
-    listStoryLimit: "/list-story/limit",
+    listStoryLimit: "/list-story/:limit",
+    storyCount: "/story-count",
     createStoriesTable: "/create-table",
     insertStory: "/insert-story",
   });
 });
 
-app.get("/list-story", async (req, res) => {
-  const limit = Number(req.params.limit);
+app.get("/get-story", async (req, res) => {
   const start = performance.now();
   const story = db.prepare("select * from stories limit 1").get();
   const time = `Execution time: ${performance.now() - start} ms`;
   console.log(time);
   res.send({ ...story, execTime: time });
+});
+
+app.get("/list-story", async (req, res) => {
+  const limit = Number(req.params.limit);
+  const start = performance.now();
+  const stories = db.prepare("select * from stories").all();
+  const time = `Execution time: ${performance.now() - start} ms`;
+  console.log(time);
+  res.send({ ...stories, execTime: time });
 });
 
 app.get("/list-story/:limit", async (req, res) => {
@@ -54,7 +63,7 @@ app.post("/create-table", async (_, res) => {
   );
   const time = `Execution time: ${performance.now() - start} ms`;
   console.log(time);
-  res.send({ ...story, execTime: time, message: "created" });
+  res.status(201).send({ ...story, execTime: time, message: "created" });
 });
 
 app.post("/insert-story", async (_, res) => {
@@ -66,7 +75,7 @@ app.post("/insert-story", async (_, res) => {
     .get();
   const time = `Execution time: ${performance.now() - start} ms`;
   console.log(time);
-  res.send({ ...story, execTime: time, message: "inserted" });
+  res.status(201).send({ ...story, execTime: time, message: "inserted" });
 });
 
 app.listen(port, () => {
