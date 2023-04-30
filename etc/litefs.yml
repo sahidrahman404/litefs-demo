@@ -10,6 +10,8 @@ fuse:
 # However, this data should not be accessed directly by the user application.
 data:
   dir: "/var/lib/litefs"
+  retention: "10m"
+  retention-monitor-interval: "1m"
 
 # This section defines settings for the option HTTP proxy.
 # This proxy can handle primary forwarding & replica consistency
@@ -27,27 +29,18 @@ proxy:
 # the last command to be long-running (e.g. an application server). When the
 # last command exits, LiteFS is shut down.
 exec:
-  - cmd: "litefs-readme -addr :8081 -dsn /litefs/readme.db"
+  - cmd: "npm start"
 
-# The lease section defines how LiteFS creates a cluster and
-# implements leader election. For dynamic clusters, use the
-# "consul". This allows the primary to change automatically when
-# the current primary goes down. For a simpler setup, use
-# "static" which assigns a single node to be the primary and does
-# not failover.
+# The lease section specifies how the cluster will be managed. We're using the
+# "consul" lease type so that our application can dynamically change the primary.
+#
+# These environment variables will be available in your Fly.io application.
 lease:
-  # Required. Must be either "consul" or "static".
-  type: "static"
-
-  # Required. The URL for this node's LiteFS API.
-  # Should match HTTP port.
+  type: "consul"
   advertise-url: "http://${HOSTNAME}.vm.${FLY_APP_NAME}.internal:20202"
-
-  # Sets the hostname that other nodes will use to reference this
-  # node. Automatically assigned based on hostname(1) if not set.
-  hostname: ${HOSTNAME}
-
-  # Specifies whether the node can become the primary. If using
-  # "static" leasing, this should be set to true on the primary
-  # and false on the replicas.
   candidate: ${FLY_REGION == PRIMARY_REGION}
+  promote: true
+
+  consul:
+    url: "${FLY_CONSUL_URL}"
+    key: "litefs/${FLY_APP_NAME}"
